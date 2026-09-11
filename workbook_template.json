@@ -1,0 +1,372 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Maintenance and tuning workbook \r\n\r\n---\r\n\r\nThis is an Azure workbook where you can perform trend analysis and entity mappings to get a better understanding of noisy detections."
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "b9f38119-fb38-49fd-885e-544ac838eb80",
+            "version": "KqlParameterItem/1.0",
+            "name": "VerboseMode",
+            "label": "Verbose Mode",
+            "type": 10,
+            "isRequired": true,
+            "isGlobal": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\"True\",\"False\"]",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": "False"
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 6"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "Explanation of the values below\r\n\r\n---\r\n\r\n- Lookback: The period of time to gather data for detection triggers. For example, 30 days.\r\n- Provider: All the different technologies that can bring detection data. For example, MDATP (which is the old name of MDE/XDR).\r\n- Alert Filter Regex: Filter only specific alerts based on a pre-defined name pattern. We use this variable to filter in the custom detections. For example, in our lab, we use the regex “\\[AUTO\\]\\s-\\s\\d{4}”.\r\n- Alert Filter Regex - exclude: Filter out specific alerts based on a pre-defined name pattern.\r\n- Number of alerts to show: Self-explanatory.- Detection type: Custom, Out-Of-The-Box detections, or both.",
+        "style": "info"
+      },
+      "conditionalVisibility": {
+        "parameterName": "VerboseMode",
+        "comparison": "isEqualTo",
+        "value": "True"
+      },
+      "name": "text - 4"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "e5c8e5ab-0bc9-4eb1-ba1b-e7a7984ab20e",
+            "version": "KqlParameterItem/1.0",
+            "name": "Lookback",
+            "type": 4,
+            "isRequired": true,
+            "isGlobal": true,
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ],
+              "allowCustom": true
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": {
+              "durationMs": 2592000000
+            }
+          },
+          {
+            "id": "ee77fa32-9c88-49db-9a8f-a0ebfd3b7f97",
+            "version": "KqlParameterItem/1.0",
+            "name": "Provider",
+            "type": 2,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "SecurityAlert\r\n| distinct ProviderName\r\n",
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "selectAllValue": "*",
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 604800000
+            },
+            "timeContextFromParameter": "Lookback",
+            "defaultValue": "value::all",
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces",
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "af55a26d-30df-4058-aeea-8fc2e9ba01b1",
+            "version": "KqlParameterItem/1.0",
+            "name": "AlertFilter",
+            "label": "Alert Name Filter Regex",
+            "type": 1,
+            "description": "You can use this regex to only include alerts that match this regex.",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": ""
+          },
+          {
+            "id": "e0ea8e64-cbeb-4014-b9b9-47a446d95d9e",
+            "version": "KqlParameterItem/1.0",
+            "name": "AlertFilterExclude",
+            "label": "Alert Name Filter Regex - exclude",
+            "type": 1,
+            "description": "You can use this regex to exclude alerts that match this regex."
+          },
+          {
+            "id": "5469247d-b155-46f0-941a-26f3be1beb90",
+            "version": "KqlParameterItem/1.0",
+            "name": "NumOfAlerts",
+            "label": "Number of Alerts to Show",
+            "type": 2,
+            "isRequired": true,
+            "typeSettings": {
+              "additionalResourceOptions": []
+            },
+            "jsonData": "[\r\n    {\"value\": 10, \"label\": 10},\r\n    {\"value\": 20, \"label\": 20, \"selected\": true},\r\n    {\"value\": 50, \"label\": 50},\r\n    {\"value\": 100, \"label\": 100}\r\n]"
+          },
+          {
+            "id": "d1a8f3c5-7e2b-4d9a-8f1c-3e5b7a2d9f8e",
+            "version": "KqlParameterItem/1.0",
+            "name": "DetectionTypeFilter",
+            "label": "Detection Type",
+            "type": 10,
+            "description": "Choose which detections to show: All (default), Custom (matches Alert Name Filter Regex), or OOTB (does not match Alert Name Filter Regex).",
+            "isRequired": true,
+            "isGlobal": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n    {\"value\": \"All\", \"label\": \"All\", \"selected\": true},\r\n    {\"value\": \"Custom\", \"label\": \"Custom\"},\r\n    {\"value\": \"OOTB\", \"label\": \"OOTB\"}\r\n]"
+          }
+        ],
+        "style": "formHorizontal",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "customWidth": "30",
+      "name": "Parameters"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "title": "Top triggering rules",
+        "loadType": "always",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SecurityAlert\r\n| where iff({Provider} =~ \"*\", true, ProviderName in~ ({Provider}))\r\n| where case(\r\n    \"{DetectionTypeFilter}\" == \"Custom\", (not(isempty(trim(@\"\\s*\", @\"{AlertFilter}\"))) and AlertName matches regex @\"(?i){AlertFilter}\"),\r\n    \"{DetectionTypeFilter}\" == \"OOTB\", (isempty(trim(@\"\\s*\", @\"{AlertFilter}\")) or not(AlertName matches regex @\"(?i){AlertFilter}\")),\r\n    true)\r\n| where iff(isempty(trim(@\"\\s*\", @\"{AlertFilterExclude}\")), true, not(AlertName matches regex @\"(?i){AlertFilterExclude}\"))\r\n| summarize arg_min(TimeGenerated, *) by SystemAlertId\r\n| make-series Trend = count() default = 0 on TimeGenerated from {Lookback:start} to now() step 1d by AlertName\r\n| extend Total = array_sum(Trend)\r\n| order by Total desc\r\n| project-away TimeGenerated\r\n| top {NumOfAlerts} by Total desc",
+              "size": 0,
+              "timeContextFromParameter": "Lookback",
+              "exportFieldName": "AlertName",
+              "exportParameterName": "AlertName",
+              "showExportToExcel": true,
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "AlertName",
+                    "formatter": 1,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30%"
+                    }
+                  },
+                  {
+                    "columnMatch": "Trend",
+                    "formatter": 10,
+                    "formatOptions": {
+                      "min": 0,
+                      "max": 10,
+                      "palette": "greenRed",
+                      "compositeBarSettings": {
+                        "labelText": "",
+                        "columnSettings": []
+                      }
+                    }
+                  },
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 6
+                  },
+                  {
+                    "columnMatch": "count_",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "aggregation": "Count"
+                    }
+                  }
+                ]
+              },
+              "tileSettings": {
+                "showBorder": false,
+                "titleContent": {
+                  "columnMatch": "AlertName",
+                  "formatter": 1
+                },
+                "leftContent": {
+                  "columnMatch": "count_",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "auto"
+                  },
+                  "numberFormat": {
+                    "unit": 17,
+                    "options": {
+                      "maximumSignificantDigits": 3,
+                      "maximumFractionDigits": 2
+                    }
+                  }
+                }
+              },
+              "graphSettings": {
+                "type": 0,
+                "topContent": {
+                  "columnMatch": "AlertName",
+                  "formatter": 1
+                },
+                "centerContent": {
+                  "columnMatch": "count_",
+                  "formatter": 1,
+                  "numberFormat": {
+                    "unit": 17,
+                    "options": {
+                      "maximumSignificantDigits": 3,
+                      "maximumFractionDigits": 2
+                    }
+                  }
+                }
+              },
+              "chartSettings": {
+                "xAxis": "TimeGenerated",
+                "yAxis": [
+                  "count_"
+                ],
+                "group": "AlertName",
+                "createOtherGroup": null
+              },
+              "mapSettings": {
+                "locInfo": "LatLong",
+                "sizeSettings": "count_",
+                "sizeAggregation": "Sum",
+                "legendMetric": "count_",
+                "legendAggregation": "Sum",
+                "itemColorSettings": {
+                  "type": "heatmap",
+                  "colorAggregation": "Sum",
+                  "nodeColorField": "count_",
+                  "heatmapPalette": "greenRed"
+                }
+              }
+            },
+            "name": "query - 0"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "# Top entities for {AlertName}"
+            },
+            "conditionalVisibility": {
+              "parameterName": "AlertName",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "text - 2"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "SecurityAlert\r\n| where iff({Provider} =~ \"*\", true, ProviderName in~ ({Provider}))\r\n| where AlertName =~ \"{AlertName}\"\r\n| summarize arg_min(TimeGenerated, *) by SystemAlertId\r\n| mv-expand todynamic(Entities)\r\n| project Entities\r\n| where isnotempty(Entities.Type)\r\n| extend Value = case(\r\n                       Entities.Type =~ \"host\" and isnotempty(Entities.FQDN), Entities.FQDN,\r\n                        Entities.Type =~ \"host\" and isnotempty(Entities.HostName), Entities.HostName,\r\n                        Entities.Type =~ \"host\" and isnotempty(Entities.NetBiosName), Entities.NetBiosName,\r\n                        Entities.Type =~ \"host\" and isnotempty(Entities.AadDeviceId), Entities.AadDeviceId,\r\n                        Entities.Type =~ \"host\" and isnotempty(Entities.MdatpDeviceId), Entities.MdatpDeviceId,\r\n                        Entities.Type =~ \"host\" and isnotempty(Entities.OMSAgentID), Entities.OMSAgentID,\r\n                        Entities.Type =~ \"account\" and isnotempty(Entities.UserPrincipalName), Entities.UserPrincipalName,\r\n                        Entities.Type =~ \"account\" and isnotempty(Entities.DisplayName), Entities.DisplayName,\r\n                        Entities.Type =~ \"account\" and isnotempty(Entities.Name), Entities.Name,\r\n                        Entities.Type =~ \"account\" and isnotempty(Entities.Sid), Entities.Sid,\r\n                        Entities.Type =~ \"account\" and isnotempty(Entities.AadUserId), Entities.AadUserId,\r\n                        Entities.Type =~ \"account\" and isnotempty(Entities.ObjectGuid), Entities.ObjectGuid,\r\n                        Entities.Type =~ \"process\" and isnotempty(Entities.CommandLine), Entities.CommandLine,\r\n                        Entities.Type =~ \"process\" and isnotempty(Entities.FriendlyName), Entities.FriendlyName,\r\n                        Entities.Type =~ \"process\" and isnotempty(Entities.ImageFile.Name), Entities.ImageFile.Name,\r\n                        Entities.Type =~ \"process\" and isnotempty(Entities.ProcessId), strcat(\"ProcessId:\", Entities.ProcessId),\r\n                        // Known process structure where MDE doesn't provide useful process properties, usually observed in the DeviceNetworkEvents table.\r\n                        Entities.Type =~ \"process\" and isempty(Entities.ProcessId) and isempty(Entities.CommandLine) and isempty(Entities.FriendlyName) and isempty(Entities.ImageFile.Name), \"Process entity with no populated process properties\",\r\n                        Entities.Type =~ \"ip\" and isnotempty(Entities.Address), Entities.Address,\r\n                        Entities.Type =~ \"file\" and isnotempty(Entities.Name), Entities.Name,\r\n                        Entities.Type =~ \"file\" and isnotempty(Entities.Directory), Entities.Directory,\r\n                        Entities.Type =~ \"file\" and isnotempty(Entities.FileHashes) and isnotempty(Entities.FileHashes[0].Value), strcat(tostring(Entities.FileHashes[0].Algorithm), \":\", tostring(Entities.FileHashes[0].Value)),\r\n                        // Known file structure where MDE provides only a reference to the hash entity.\r\n                        Entities.Type =~ \"file\" and isempty(Entities.Name) and isempty(Entities.Directory) and isnotempty(Entities.FileHashes) and isnotempty(Entities.FileHashes[0][\"$ref\"]) and isempty(Entities.FileHashes[0].Value), \"File entity with referenced hash only\",\r\n                        Entities.Type =~ \"url\" and isnotempty(Entities.Url), Entities.Url,\r\n                        Entities.Type =~ \"cloud-application\" and isnotempty(Entities.Name), Entities.Name,\r\n                        Entities.Type =~ \"cloud-application\" and isnotempty(Entities.InstanceName), Entities.InstanceName,\r\n                        Entities.Type =~ \"filehash\" and isnotempty(Entities.Value), strcat(Entities.Algorithm, \":\", Entities.Value),\r\n                        Entities.Type =~ \"mailCluster\" and isnotempty(Entities.ClusterByValue), Entities.ClusterByValue,\r\n                        Entities.Type =~ \"mailMessage\" and isnotempty(Entities.Subject), Entities.Subject, \r\n                        Entities.Type =~ \"mailMessage\" and isnotempty(Entities.Sender) and isnotempty(Entities.Recipient), strcat(Entities.Sender, \"=>\", Entities.Recipient), \r\n                        Entities.Type =~ \"mailMessage\" and isnotempty(Entities.NetworkMessageId), Entities.NetworkMessageId, \r\n                        Entities.Type =~ \"mailbox\" and isnotempty(Entities.MailboxPrimaryAddress), Entities.MailboxPrimaryAddress, \r\n                        Entities.Type =~ \"malware\" and isnotempty(Entities.Name), Entities.Name, \r\n                        Entities.Type =~ \"network-connection\" and isnotempty(Entities.FriendlyName), Entities.FriendlyName, \r\n                        Entities.Type =~ \"registry-value\" and isnotempty(Entities.Name), strcat(iff(isnotempty(Entities.Key.Key), Entities.Key.Key, \"\"),  Entities.Name),\r\n                        Entities.Type =~ \"registry-value\" and isnotempty(Entities.Key.Key), Entities.Key.Key,\r\n                        Entities.Type =~ \"MailboxConfiguration\" and isnotempty(Entities.ConfigId), Entities.ConfigId, \r\n                        Entities.Type =~ \"MailboxConfiguration\" and isnotempty(Entities.RuleName), Entities.RuleName, \r\n                        Entities.Type =~ \"azure-resource\" and isnotempty(Entities.ResourceName), strcat(Entities.ResourceType, \"=>\", Entities.ResourceName), \r\n                        Entities.Type =~ \"azure-resource\" and isnotempty(Entities.ResourceId), Entities.ResourceId, \r\n                        Entities.Type =~ \"dns\" and isnotempty(Entities.DomainName), Entities.DomainName, \r\n                        Entities.Type =~ \"security-group\" and isnotempty(Entities.FriendlyName), Entities.FriendlyName, \r\n                        Entities.Type =~ \"security-group\" and isnotempty(Entities.Id), Entities.Id, \r\n                        Entities.Type =~ \"DomainResourceIdentifier\" and isnotempty(Entities.ResourceName), Entities.ResourceName, \r\n                        Entities.Type =~ \"ResourceAccessInfo\" and isnotempty(Entities.IpAddress), Entities.IpAddress, \r\n                        Entities.Type =~ \"blob-container\" and isnotempty(Entities.Name), Entities.Name, \r\n                        Entities.Type =~ \"blob-container\" and isnotempty(Entities.FriendlyName), Entities.FriendlyName, \r\n                        Entities.Type =~ \"oauth-application\" and isnotempty(Entities.Name), Entities.Name, \r\n                        Entities.Type =~ \"oauth-application\" and isnotempty(Entities.OAuthAppId), Entities.OAuthAppId, \r\n                        Entities.Type =~ \"alerts\" and isnotempty(Entities.DisplayName), Entities.DisplayName, \r\n                        strcat(\"Unsupported entity structure: \", tostring(Entities.Type))\r\n)\r\n| project Type=tostring(Entities.Type), Value\r\n| summarize count() by Type, Value\r\n| sort by count_ desc",
+              "size": 0,
+              "timeContextFromParameter": "Lookback",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Type",
+                    "formatter": 5
+                  },
+                  {
+                    "columnMatch": "Value",
+                    "formatter": 1,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "40%"
+                    }
+                  }
+                ],
+                "hierarchySettings": {
+                  "treeType": 1,
+                  "groupBy": [
+                    "Type"
+                  ],
+                  "expandTopLevel": true
+                },
+                "sortBy": [
+                  {
+                    "itemKey": "count_",
+                    "sortOrder": 2
+                  }
+                ]
+              },
+              "sortBy": [
+                {
+                  "itemKey": "count_",
+                  "sortOrder": 2
+                }
+              ]
+            },
+            "conditionalVisibility": {
+              "parameterName": "AlertName",
+              "comparison": "isNotEqualTo"
+            },
+            "name": "query - 1"
+          }
+        ],
+        "exportParameters": true
+      },
+      "name": "Top 20 triggering rules"
+    }
+  ],
+  "defaultResourceIds": [
+  ],
+  "fallbackResourceIds": [
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
